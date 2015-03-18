@@ -8,7 +8,6 @@ server_memory   = "2048" # MB
 server_cpus     = "2"
 server_name     = "unnamed" # CHANGE THIS
 
-
 # Provisioning shell scripts
 $base_script = <<SCRIPT
 #!/usr/bin/env bash
@@ -16,15 +15,8 @@ $base_script = <<SCRIPT
 echo ">>> Updating repositories"
 sudo apt-get update
 
-echo ">>> Adding new package repositories"
-sudo apt-get install -qq python-software-properties software-properties-common
-sudo add-apt-repository ppa:chris-lea/node.js
-
-echo ">>> Re-updating repositories"
-sudo apt-get update
-
 echo ">>> Installing base packages"
-# Install base packages
+
 # -qq implies -y --force-yes
 sudo apt-get install -qq curl unzip git-core ack-grep 
 sudo apt-get install -qq g++
@@ -33,8 +25,14 @@ SCRIPT
 $nodejs_script = <<SCRIPT
 #!/usr/bin/env bash
 
+echo ">>> Configuring Prerequisites"
+curl -sL https://deb.nodesource.com/setup_0.12 | sudo bash -
+
 echo ">>> Installing nodejs"
 sudo apt-get install -qq nodejs
+
+echo ">>> Updating npm"
+
 sudo npm install -g npm
 
 SCRIPT
@@ -42,7 +40,15 @@ SCRIPT
 $iojs_script = <<SCRIPT
 #!/usr/bin/env bash
 
-# TODO
+echo ">>> Configuring Prerequisites"
+curl -sL https://deb.nodesource.com/setup_iojs_1.x | sudo bash -
+
+echo ">>> Installing iojs"
+sudo apt-get install -qq iojs
+
+echo ">>> Updating npm"
+sudo npm install -g npm
+
 SCRIPT
 
 $npm_packages_script = <<SCRIPT
@@ -87,9 +93,11 @@ Vagrant.configure(vagrant_api) do |config|
   # Install Base Packages
   config.vm.provision :shell, :inline => $base_script
 
-  # Install nodejs (0.10.33)
+  # Uncomment either nodejs or iojs, but not both
+  # Install nodejs (0.12.0)
   config.vm.provision :shell, :inline => $nodejs_script
 
+  # Install iojs (1.x)
   # config.vm.provision :shell, :inline => $iojs_script
 
   # Install node packages
